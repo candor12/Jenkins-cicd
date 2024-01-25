@@ -8,7 +8,7 @@ pipeline {
 	agent any
 	environment {
 		branch           =       "docker-multiservices"
-		repoUrl          =       "https://github.com/candor12/cicd_jenkins.git"
+		repoUrl          =       "https://github.com/candor12/Jenkins-cicd.git"
 		gitCreds         =       "gitPAT"
 	        ecrRepo          =       "674583976178.dkr.ecr.us-east-2.amazonaws.com/teamimagerepo"
 	        dockerImage      =       "${env.ecrRepo}:${env.BUILD_ID}" 
