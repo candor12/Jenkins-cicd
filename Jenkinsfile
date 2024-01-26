@@ -101,8 +101,9 @@ pipeline {
 				script { 
 					cleanWs()
 					git branch: branch, url: repoUrl
-					sh '''docker build -t ${dockerImage} ./
-					docker tag $dockerImage $ecrRepo:latest
+					def dockerImg = "${ecrRepo}:${gitTag}"
+					sh '''docker build -t ${dockerImg} ./
+					docker tag ${dockerImg} $ecrRepo:latest
                                         '''
 				}
 			}
@@ -112,8 +113,7 @@ pipeline {
 			when { not { expression { return params.Scan  } } }
 			steps {
 				script {
-					def grypeImg = "${ecrRepo}:${gitTag}"
-					sh "grype ${grypeImg} --scope all-layers --fail-on critical -o template -t ~/jenkins/grype/html.tmpl > ./grype.html"
+					sh "grype ${dockerImg} --scope all-layers --fail-on critical -o template -t ~/jenkins/grype/html.tmpl > ./grype.html"
 				}
 			}
 			post { always { 
@@ -128,11 +128,11 @@ pipeline {
 			when { not { buildingTag() } }
 			steps {
 				script {
-					def status = sh(returnStatus: true, script: 'docker push $dockerImage')
+					def status = sh(returnStatus: true, script: 'docker push ${dockerImg}')
 					if (status != 0) {
 					    sh "aws ecr get-authorization-token --region us-east-2 --output text --query 'authorizationData[].authorizationToken' | base64 -d | cut -d: -f2 > ecr.txt"
                                             sh 'cat ecr.txt | docker login -u AWS 674583976178.dkr.ecr.us-east-2.amazonaws.com --password-stdin'
-					    sh 'docker push $dockerImage'
+					    sh "docker push ${dockerImg}"
 					    sh 'rm -f ecr.txt'
 					}
 					sh "docker push ${ecrRepo}:latest"
@@ -140,7 +140,7 @@ pipeline {
 			}
 			post { 
 				always {
-					sh """docker rmi -f ${dockerImage}
+					sh """docker rmi -f ${dockerImg}
 					docker rmi -f ${ecrRepo}:latest""" 
 				}
 			}
