@@ -101,7 +101,7 @@ pipeline {
 				script { 
 					cleanWs()
 					git branch: branch, url: repoUrl
-					def dockerImg = "${ecrRepo}:${gitTag}"
+				        dockerImg = "${ecrRepo}:${gitTag}"
 					sh 'docker build -t $dockerImg ./'
 					sh 'docker tag ${dockerImg} $ecrRepo:latest'
 				}
