@@ -97,9 +97,10 @@ pipeline {
 					sh "grype ${dockerImage} --scope all-layers --fail-on critical -o template -t ~/jenkins/grype/html.tmpl > ./grype.html"
 				}
 			}
-			post { always { archiveArtifacts artifacts: "grype.html", fingerprint: true
-				                     publishHTML target : [allowMissing: true, alwaysLinkToLastBuild: true, keepAll: true,
-									   reportDir: './', reportFiles: 'grype.html', reportName: 'Grype Scan Report', reportTitles: 'Grype Scan Report']
+			post { always { 
+				archiveArtifacts artifacts: "grype.html", fingerprint: true
+				publishHTML target : [allowMissing: true, alwaysLinkToLastBuild: true, keepAll: true,
+						      reportDir: './', reportFiles: 'grype.html', reportName: 'Grype Scan Report', reportTitles: 'Grype Scan Report']
 				      }
 			     }
 			}
@@ -112,16 +113,15 @@ pipeline {
 					    sh "aws ecr get-authorization-token --region us-east-2 --output text --query 'authorizationData[].authorizationToken' | base64 -d | cut -d: -f2 > ecr.txt"
                                             sh 'cat ecr.txt | docker login -u AWS 674583976178.dkr.ecr.us-east-2.amazonaws.com --password-stdin'
 					    sh 'docker push $dockerImage'
+					    sh 'rm -f ecr.txt'
 					}
 					sh "docker push ${ecrRepo}:latest"
 				}
 			}
 			post { 
 				always {
-					sh """ rm -f ecr.txt
-					docker rmi -f ${dockerImage}
-					docker rmi -f ${ecrRepo}:latest
-				        """ 
+					sh """docker rmi -f ${dockerImage}
+					docker rmi -f ${ecrRepo}:latest""" 
 				}
 			}
 		}
