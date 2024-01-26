@@ -20,6 +20,8 @@ pipeline {
 	}
 	stages{
 		stage('SCM Checkout') {
+			when {
+				buildingTag() }
 			steps {
 				git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
 			}
