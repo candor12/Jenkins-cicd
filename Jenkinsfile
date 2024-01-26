@@ -54,9 +54,9 @@ pipeline {
 		}
 		stage('SonarQube Scan') {
 			when { 
-				anyOf { not { 
-				buildingTag()
-				expression { return params.Scan  } } }}
+				anyOf { 
+					not { buildingTag() }
+					not { expression { return params.Scan  } } } }
 			steps {
 				script { 
 					withSonarQubeEnv('sonar') {
