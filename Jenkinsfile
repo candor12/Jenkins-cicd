@@ -73,20 +73,20 @@ pipeline {
 				script {
 					sh "mvn deploy -DskipTests -Dmaven.install.skip=true | tee jfrog.log"
 					def artifactUrl      =     sh(returnStdout: true, script: 'tail -20 jfrog.log | grep ".war" jfrog.log | grep -v INFO | grep -v Uploaded')
-				        jfrog_Artifact       =     artifactUrl.drop(20)  
-					//def tag1             =     jfrog_Artifact.drop(101)
-				        //tag2                 =     tag1.take(19)
-					def tag2             =     sh(returnStdout: true, script: """echo "${jfrog_Artifact}" | sed 's/.*-\\([0-9.]*-[0-9]*\\).*/\\1/' """)
-					echo "${tag2}"
+				        jfrog_Artifact       =     artifactUrl.drop(20)
 					echo "Artifact URL: ${jfrog_Artifact}"
+					
+					
 				}
 			}
 		}
-		/*stage('Push Tag to Repository') {
+		stage('Push Tag to Repository') {
 			when { not { buildingTag() } }
 			steps { 
 				withCredentials([usernamePassword(credentialsId: 'gitPAT',usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
 					script{
+						def tag2        =  sh(returnStdout: true, script: """echo "${jfrog_Artifact}" | sed 's/.*-\\([0-9.]*-[0-9]*\\).*/\\1/' """)
+					        echo "${tag2}"
 					        def pomVersion  =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
 						gitTag          =  "${pomVersion}${tag2}-${BUILD_ID}"
 						sh """git tag -a ${gitTag} -m 'Pushed by Jenkins'
@@ -96,7 +96,7 @@ pipeline {
 				}
 			}
 		} 
-  */
+  
 		stage('Docker Image Build') {
 			agent { label 'agent1' }
 			when { not { buildingTag() } }
