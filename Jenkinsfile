@@ -10,7 +10,7 @@ pipeline {
 		booleanParam(name: "Scan", defaultValue: false, description: "By Pass SonarQube and Grype Scan")
 	}
 	environment {
-		branch           =       "jfrog"
+		branch           =       "buildingTag"
 		repoUrl          =       "https://github.com/candor12/Jenkins-cicd.git"
 		gitCreds         =       "gitPAT"
 	        scannerHome      =       tool 'sonartool'
