@@ -3,6 +3,7 @@ pipeline {
 		buildDiscarder(logRotator(numToKeepStr: '8'))
                 skipDefaultCheckout() 
                 disableConcurrentBuilds() 
+		ansiColor('xterm')
 	}
 	agent any
 	parameters {
@@ -10,7 +11,7 @@ pipeline {
 		booleanParam(name: "Scan", defaultValue: false, description: "By Pass SonarQube and Grype Scan")
 	}
 	environment {
-		branch           =       "buildingTag"
+		branch           =       "jfrog"
 		repoUrl          =       "https://github.com/candor12/Jenkins-cicd.git"
 		gitCreds         =       "gitPAT"
 	        scannerHome      =       tool 'sonartool'
@@ -19,19 +20,16 @@ pipeline {
 	}
 	stages{
 		stage('SCM Checkout') {
-			when { buildingTag() }
 			steps {
 				git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
 			}
 		}
 		stage('Build Artifact') {
-			when { not { buildingTag() } }
 			steps {
 				sh "mvn clean package -DskipTests"
 			}
 		}
 		stage('JUnit Test'){
-			when { not { buildingTag() } }
 			//jdk-17 fails this stage.
 			tools { jdk "jdk-11" }
 			steps {
@@ -44,19 +42,18 @@ pipeline {
 			}
 		}
 		stage('SonarQube Scan') {
-			when { 
-				allOf { 
-					buildingTag() 
-					not { expression { return params.Scan  } } } }
-				steps {
+			when { not { expression { return params.Scan  } } }
+			steps {
 				script { 
 					withSonarQubeEnv('sonar') {
 						sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=jenkins1 \
                                                 -Dsonar.projectName=jenkins1 \
-                                                -Dsonar.projectVersion=2.0 \
+                                                -Dsonar.projectVersion=1.0 \
                                                 -Dsonar.sources=src/ \
                                                 -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
                                                 -Dsonar.junit.reportsPath=target/surefire-reports/ \
+                                                -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+                                                -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
 					}
 					echo "Waiting for Quality Gate"
 					timeout(time: 5, unit: 'MINUTES') {
@@ -70,8 +67,7 @@ pipeline {
 				}
 			}
 		} 
-		stage('Publish Artifacts') {
-                        when { not { buildingTag() } }
+		stage('Publish Artifact to JFrog') {
 			steps {
 				script {
 					sh "mvn deploy -DskipTests -Dmaven.install.skip=true | tee jfrog.log"
@@ -83,7 +79,6 @@ pipeline {
 		}
 		stage('Docker Image Build') {
 			agent { label 'agent1' }
-                        when { not { buildingTag() } }
 			steps {
 				script { 
 					cleanWs()
@@ -96,15 +91,10 @@ pipeline {
 		}
 		stage ('Grype Image Scan') {
 			agent { label 'agent1' }
-   			when { 
-				allOf { 
-					buildingTag() 
-					not { expression { return params.Scan  } } } }
+			when { not { expression { return params.Scan  } } }
 			steps {
 				script {
-                                        def template = curl -sfL https://github.com/anchore/grype/blob/main/templates/csv.tmpl > ./csv.tmpl
-                                        sh '${template}'
-					sh """grype ${dockerImage} --scope all-layers --fail-on critical -o template -t ./csv.tmpl > ./grype.html"""
+					sh "grype ${dockerImage} --scope all-layers --fail-on critical -o template -t ~/jenkins/grype/html.tmpl > ./grype.html"
 				}
 			}
 			post { always { 
@@ -116,7 +106,6 @@ pipeline {
 			}
 		stage('Push Image to ECR') {
 			agent { label 'agent1' }
-                        when { not { buildingTag() }}
 			steps {
 				script {
 					def status = sh(returnStatus: true, script: 'docker push $dockerImage')
@@ -138,10 +127,7 @@ pipeline {
 		}
 		stage('EKS Deployment') {
 			agent { label 'agent1' }
-			when { 
-                           allOf { 
-			      buildingTag()
-                              expression { return params.EksDeploy } } }			   
+			when { expression { return params.EksDeploy } }
 			steps {
 				script { 
 					dir('k8s') {
