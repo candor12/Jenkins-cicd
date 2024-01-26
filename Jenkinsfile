@@ -88,7 +88,7 @@ pipeline {
 						def tag2        =  sh(returnStdout: true, script: """echo "${jfrog_Artifact}" | sed 's/.*-\\([0-9.]*-[0-9]*\\).*/\\1/' """)
 					        echo "${tag2}"
 					        def pomVersion  =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
-						gitTag          =  "${pomVersion}${tag2}-${BUILD_ID}"
+						gitTag          =  "${pomVersion}${tag2}"
 						sh """git tag -a ${gitTag} -m 'Pushed by Jenkins'
                                                 git push ${repoUrl} --tags
 				                """
