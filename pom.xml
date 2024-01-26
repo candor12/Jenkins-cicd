@@ -4,7 +4,7 @@
 	<groupId>com.team.project</groupId>
 	<artifactId>hello</artifactId>
 	<packaging>war</packaging>
-	<version>v5.0-SNAPSHOT</version>
+	<version>v6.0-SNAPSHOT</version>
 	<name>Team Project</name>
 	<url>http://maven.apache.org</url>
 	<properties>
