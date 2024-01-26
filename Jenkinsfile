@@ -16,7 +16,7 @@ pipeline {
 		gitCreds         =       "gitPAT"
 	        scannerHome      =       tool 'sonartool'
 	        ecrRepo          =       "674583976178.dkr.ecr.us-east-2.amazonaws.com/teamimagerepo"
-	        dockerImage      =       "${env.ecrRepo}:${env.BUILD_ID}-${env.BUILD_TIMESTAMP}" 
+	        dockerImage      =       "${env.ecrRepo}:${gitTag}" 
 		pullTag          =       "${env.JOB_BASE_NAME}"
 	}
 	stages{
@@ -34,15 +34,9 @@ pipeline {
 		}
 		stage('JUnit Test'){
 			when { not { buildingTag() } }
-			//jdk-17 fails this stage.
 			tools { jdk "jdk-11" }
 			steps {
 				sh "mvn test"
-			}
-			post {
-				always {
-					junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults : true)
-				}
 			}
 		}
 		stage('Pull Tag and Artifact') {
@@ -52,8 +46,7 @@ pipeline {
 			}
 		}
 		stage('SonarQube Scan') {
-			when { 
-				allOf { 
+			when { allOf { 
 					not { buildingTag() }
 					not { expression { return params.Scan  } } } }
 			steps {
@@ -66,21 +59,17 @@ pipeline {
                                                 -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
                                                 -Dsonar.junit.reportsPath=target/surefire-reports/ \
                                                 -Dsonar.jacoco.reportsPath=target/jacoco.exec \
-                                                -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
-					}
+                                                -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml''' }
 					echo "Waiting for Quality Gate"
 					timeout(time: 5, unit: 'MINUTES') {
 						def qualitygate = waitForQualityGate(webhookSecretId: 'sonarhook')
 						if (qualitygate.status != "OK") { 
 							catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') { 
-								sh "exit 1"  
-							}
-						}
-					}
+								sh "exit 1"  } } }
 				}
 			}
 		} 
-		stage('Publish Artifact to JFrog') {
+		stage('Publish Artifacts to JFrog') {
 			when { not { buildingTag() } }
 			steps {
 				script {
@@ -112,7 +101,7 @@ pipeline {
 				script { 
 					cleanWs()
 					git branch: branch, url: repoUrl
-					sh '''docker build -t $dockerImage ./
+					sh '''docker build -t ${dockerImage} ./
 					docker tag $dockerImage $ecrRepo:latest
                                         '''
 				}
