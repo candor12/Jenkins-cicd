@@ -78,7 +78,8 @@ pipeline {
 				        jfrog_Artifact       =     artifactUrl.drop(20)  
 					//def tag1             =     jfrog_Artifact.drop(101)
 				        //tag2                 =     tag1.take(19) 
-					def tag2             =     sh(returnStdout: true, script: "echo ${jfrog_Artifact } | sed 's/.*-\([0-9.]*-[0-9]*\).*/\1/'")
+					regexp               =     "s/.*-\([0-9.]*-[0-9]*\).*/\1/"
+					def tag2             =     sh(returnStdout: true, script: "echo ${jfrog_Artifact } | sed '$regexp'")
 					echo "Artifact URL: ${jfrog_Artifact}"
 				}
 			}
