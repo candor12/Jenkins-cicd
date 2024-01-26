@@ -13,7 +13,7 @@ pipeline {
 	}
 	environment {
 		branch           =       "master"
-		repoUrl          =       "https://github.com/candor12/Jenkins-cicd.git"
+		repoUrl          =       "https://github.com/candor12/jenkins-cicd.git"
 		gitCreds         =       "gitPAT"
 	        scannerHome      =       tool 'sonartool'
 	        ecrRepo          =       "674583976178.dkr.ecr.us-east-2.amazonaws.com/teamimagerepo"
