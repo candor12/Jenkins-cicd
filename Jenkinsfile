@@ -78,13 +78,14 @@ pipeline {
 				        jfrog_Artifact       =     artifactUrl.drop(20)  
 					//def tag1             =     jfrog_Artifact.drop(101)
 				        //tag2                 =     tag1.take(19) 
-					regexp               =     "s/.*-\([0-9.]*-[0-9]*\).*/\1/"
-					def tag2             =     sh(returnStdout: true, script: """echo ${jfrog_Artifact } | sed $regexp""")
+					regexp               =     sReg =~ /.*-\([0-9.]*-[0-9]*\).*/\1/
+					println regexp[0]
+					//def tag2             =     sh(returnStdout: true, script: """echo ${jfrog_Artifact } | sed $regexp""")
 					echo "Artifact URL: ${jfrog_Artifact}"
 				}
 			}
 		}
-		stage('Push Tag to Repository') {
+		/*stage('Push Tag to Repository') {
 			when { not { buildingTag() } }
 			steps { 
 				withCredentials([usernamePassword(credentialsId: 'gitPAT',usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
@@ -98,6 +99,7 @@ pipeline {
 				}
 			}
 		} 
+  */
 		stage('Docker Image Build') {
 			agent { label 'agent1' }
 			when { not { buildingTag() } }
