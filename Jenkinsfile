@@ -53,9 +53,7 @@ pipeline {
                                                 -Dsonar.projectVersion=1.0 \
                                                 -Dsonar.sources=src/ \
                                                 -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
-                                                -Dsonar.junit.reportsPath=target/surefire-reports/ \
-                                                -Dsonar.jacoco.reportsPath=target/jacoco.exec \
-                                                -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
+                                                -Dsonar.junit.reportsPath=target/surefire-reports/ '''
 					}
 					echo "Waiting for Quality Gate"
 					timeout(time: 5, unit: 'MINUTES') {
@@ -78,7 +76,8 @@ pipeline {
 				        jfrog_Artifact       =     artifactUrl.drop(20)  
 					//def tag1             =     jfrog_Artifact.drop(101)
 				        //tag2                 =     tag1.take(19)
-					def tag2             =     sh(returnStdout: true, script: """sed "s/.*-\\([0-9.]*-[0-9]*\\).*/\\1/" << ${jfrog_Artifact}""")
+					def tag2             =     sh(returnStdout: true, script: "sed 's/.*-\\([0-9.]*-[0-9]*\\).*/\\1/' << ${jfrog_Artifact}")
+					echo "${tag2}"
 					echo "Artifact URL: ${jfrog_Artifact}"
 				}
 			}
