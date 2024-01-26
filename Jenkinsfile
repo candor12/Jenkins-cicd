@@ -25,13 +25,13 @@ pipeline {
 			}
 		}
 		stage('Build Artifact') {
-			when { not {
-				buildingTag() } }
+			when { not { buildingTag() } }
 			steps {
 				sh "mvn clean package -DskipTests"
 			}
 		}
 		stage('JUnit Test'){
+			when { not { buildingTag() } }
 			//jdk-17 fails this stage.
 			tools { jdk "jdk-11" }
 			steps {
@@ -70,17 +70,35 @@ pipeline {
 			}
 		} 
 		stage('Publish Artifact to JFrog') {
+			when { not { buildingTag() } }
 			steps {
 				script {
 					sh "mvn deploy -DskipTests -Dmaven.install.skip=true | tee jfrog.log"
 					def artifactUrl      =     sh(returnStdout: true, script: 'tail -20 jfrog.log | grep ".war" jfrog.log | grep -v INFO | grep -v Uploaded')
-				        jfrog_Artifact       =     artifactUrl.drop(20)        
+				        jfrog_Artifact       =     artifactUrl.drop(20)  
+					def tag1             =     nexusArtifact.drop(98)
+				        tag2                 =     tag1.take(19) 
 					echo "Artifact URL: ${jfrog_Artifact}"
 				}
 			}
 		}
+		stage('Push Tag to Repository') {
+			when { not { buildingTag() } }
+			steps { 
+				withCredentials([usernamePassword(credentialsId: 'gitPAT',usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+					script{
+					        def pomVersion  =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
+						gitTag          =  "${pomVersion}${tag2}"
+						sh """git tag -a ${gitTag} -m 'Pushed by Jenkins'
+                                                git push origin --tags
+				                """
+					}
+				}
+			}
+		} 
 		stage('Docker Image Build') {
 			agent { label 'agent1' }
+			when { not { buildingTag() } }
 			steps {
 				script { 
 					cleanWs()
@@ -108,6 +126,7 @@ pipeline {
 			}
 		stage('Push Image to ECR') {
 			agent { label 'agent1' }
+			when { not { buildingTag() } }
 			steps {
 				script {
 					def status = sh(returnStatus: true, script: 'docker push $dockerImage')
