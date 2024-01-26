@@ -103,7 +103,7 @@ pipeline {
 					git branch: branch, url: repoUrl
 				        def dockerTag = "${gitTag}"
 					dockerImg     = "${ecrRepo}:${dockerTag}"
-					sh 'docker build -t ${dockerImg} ./'
+					sh """docker build -t ${dockerImg} ./"""
 					sh 'docker tag ${dockerImg} $ecrRepo:latest'
 				}
 			}
