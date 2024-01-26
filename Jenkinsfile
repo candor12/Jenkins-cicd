@@ -52,8 +52,7 @@ pipeline {
                                                 -Dsonar.projectName=jenkins1 \
                                                 -Dsonar.projectVersion=1.0 \
                                                 -Dsonar.sources=src/ \
-                                                -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
-                                                -Dsonar.junit.reportsPath=target/surefire-reports/ '''
+                                                 '''
 					}
 					echo "Waiting for Quality Gate"
 					timeout(time: 5, unit: 'MINUTES') {
@@ -75,8 +74,6 @@ pipeline {
 					def artifactUrl      =     sh(returnStdout: true, script: 'tail -20 jfrog.log | grep ".war" jfrog.log | grep -v INFO | grep -v Uploaded')
 				        jfrog_Artifact       =     artifactUrl.drop(20)
 					echo "Artifact URL: ${jfrog_Artifact}"
-					
-					
 				}
 			}
 		}
@@ -85,18 +82,15 @@ pipeline {
 			steps { 
 				withCredentials([usernamePassword(credentialsId: 'gitPAT',usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
 					script{
-						def tag2        =  sh(returnStdout: true, script: """echo "${jfrog_Artifact}" | sed 's/.*-\\([0-9.]*-[0-9]*\\).*/\\1/' """)
-					        echo "${tag2}"
-					        def pomVersion  =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
-						gitTag          =  "${pomVersion}${tag2}"
+						def tag          =  sh(returnStdout: true, script: """echo "${jfrog_Artifact}" | sed 's/.*-\\([0-9.]*-[0-9]*\\).*/\\1/' """)
+					        def pomVersion   =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
+						gitTag           =  "${pomVersion}${tag}"
 						sh """git tag ${gitTag}
-                                                git push ${repoUrl} --tags
-				                """
+                                                git push ${repoUrl} --tags"""
 					}
 				}
 			}
 		} 
-  
 		stage('Docker Image Build') {
 			agent { label 'agent1' }
 			when { not { buildingTag() } }
