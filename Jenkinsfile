@@ -7,12 +7,12 @@ pipeline {
 	}
 	agent any
 	parameters {
-		booleanParam(name: "EksDeploy", defaultValue: false, description: "Deploy the Build to EKS Cluster")
+		booleanParam(name: "EKSDeploy", defaultValue: false, description: "Deploy the Build to EKS Cluster")
 		booleanParam(name: "Scan", defaultValue: false, description: "By Pass SonarQube and Grype Scan")
 	}
 	environment {
 		branch           =       "jfrog"
-		repoUrl          =       "https://github.com/candor12/Jenkins-cicd.git"
+		repoUrl          =       "https://github.com/candor12/jenkins-cicd.git"
 		gitCreds         =       "gitPAT"
 	        scannerHome      =       tool 'sonartool'
 	        ecrRepo          =       "674583976178.dkr.ecr.us-east-2.amazonaws.com/teamimagerepo"
