@@ -17,9 +17,11 @@ pipeline {
 	        scannerHome      =       tool 'sonartool'
 	        ecrRepo          =       "674583976178.dkr.ecr.us-east-2.amazonaws.com/teamimagerepo"
 	        dockerImage      =       "${env.ecrRepo}:${env.BUILD_ID}-${env.BUILD_TIMESTAMP}" 
+		pullTag          =       "${env. JOB_NAME}"
 	}
 	stages{
 		stage('SCM Checkout') {
+			when { not { buildingTag() } }
 			steps {
 				git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
 			}
@@ -43,8 +45,17 @@ pipeline {
 				}
 			}
 		}
+		stage('Pull Tag and Artifact') {
+			when { buildingTag() }
+			steps {
+				sh "git clone -b '${pullTag}' --single-branch ${repoUrl}"
+				//git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
+			}
+		}
 		stage('SonarQube Scan') {
-			when { not { expression { return params.Scan  } } }
+			when { not { 
+				buildingTag()
+				expression { return params.Scan  } } }
 			steps {
 				script { 
 					withSonarQubeEnv('sonar') {
@@ -52,7 +63,10 @@ pipeline {
                                                 -Dsonar.projectName=jenkins1 \
                                                 -Dsonar.projectVersion=1.0 \
                                                 -Dsonar.sources=src/ \
-                                                 '''
+                                                -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
+                                                -Dsonar.junit.reportsPath=target/surefire-reports/ \
+                                                -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+                                                -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
 					}
 					echo "Waiting for Quality Gate"
 					timeout(time: 5, unit: 'MINUTES') {
