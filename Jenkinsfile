@@ -139,7 +139,7 @@ pipeline {
 			when { 
                            allOf { 
 			      buildingTag()
-                              expression { return params.EksDeploy } }			   
+                              expression { return params.EksDeploy } } }			   
 			steps {
 				script { 
 					dir('k8s') {
