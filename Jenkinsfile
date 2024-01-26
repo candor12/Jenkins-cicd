@@ -20,13 +20,13 @@ pipeline {
 	}
 	stages{
 		stage('SCM Checkout') {
-			when {
-				buildingTag() }
 			steps {
 				git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
 			}
 		}
 		stage('Build Artifact') {
+			when { not {
+				buildingTag() } }
 			steps {
 				sh "mvn clean package -DskipTests"
 			}
