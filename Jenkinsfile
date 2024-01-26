@@ -48,8 +48,7 @@ pipeline {
 		stage('Pull Tag and Artifact') {
 			when { buildingTag() }
 			steps {
-				sh "git clone -b '${pullTag}' --single-branch ${repoUrl}"
-				//git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
+				sh "git clone -c advice.detachedHead=false -b '${pullTag}' --single-branch ${repoUrl}"
 			}
 		}
 		stage('SonarQube Scan') {
