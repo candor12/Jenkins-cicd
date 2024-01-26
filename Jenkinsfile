@@ -102,7 +102,8 @@ pipeline {
 					not { expression { return params.Scan  } } } }
 			steps {
 				script {
-                                        sh 'curl -sfL https://github.com/anchore/grype/blob/main/templates/csv.tmpl > ./csv.tmpl'
+                                        def template = curl -sfL https://github.com/anchore/grype/blob/main/templates/csv.tmpl > ./csv.tmpl
+                                        sh '${template}'
 					sh """grype ${dockerImage} --scope all-layers --fail-on critical -o template -t ./csv.tmpl > ./grype.html"""
 				}
 			}
