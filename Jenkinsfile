@@ -30,7 +30,8 @@ pipeline {
 		stage('Tag Checkout') {
 			when { buildingTag() } 
 			steps {
-				sh "git clone -c advice.detachedHead=false -b '${pullTag}' --single-branch ${repoUrl}"
+				//sh "git clone -c advice.detachedHead=false -b '${pullTag}' --single-branch ${repoUrl}"
+				git branch: ${pullTag}, url: repoUrl, credentialsId: 'gitPAT'
 			}
 		} 
 		stage('Build Binaries') {
@@ -68,10 +69,9 @@ pipeline {
 		stage('Print Tag Name'){
 			when { buildingTag() }
 			steps{
-				script{
+				script{ dir(
 					def tag = env.GIT_TAG
-					if (tag == null || tag.trim().isEmpty()) {
-						error "No tag provided. Deployment aborted."
+					echo "${tag}"
                     }}}}
 		stage('Build Docker Images') {
 			when { not { buildingTag() } }
