@@ -83,7 +83,6 @@ pipeline {
 					}
 				}
 			}
-		} 
 		stage('Build Images') {
 			agent { label 'agent1' }
 			steps {
