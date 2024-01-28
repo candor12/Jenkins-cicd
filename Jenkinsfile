@@ -10,7 +10,7 @@ pipeline {
 		gitCreds         =       "gitPAT"
 	        scannerHome      =       tool 'sonartool'
 	        ecrRepo          =       "674583976178.dkr.ecr.us-east-2.amazonaws.com/teamimagerepo"
-	        dockerImage      =       "${env.ecrRepo}:${env.BUILD_ID}" 
+	       
 	}
 	stages{
 		stage('SCM Checkout') {
@@ -56,6 +56,7 @@ pipeline {
 				script { 
 					cleanWs()
 					git branch: branch, url: repoUrl
+					dockerImage      =       "${env.ecrRepo}:${gitTag}" 
 					sh '''docker build -t $dockerImage ./
 					docker tag $dockerImage $ecrRepo:latest
                                         '''
