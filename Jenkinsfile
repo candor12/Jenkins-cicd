@@ -1,7 +1,7 @@
 pipeline {
 	options {
 		buildDiscarder(logRotator(numToKeepStr: '10'))
-                skipDefaultCheckout() 
+                //skipDefaultCheckout() 
                 disableConcurrentBuilds() 
 	}
 	agent any
@@ -19,12 +19,11 @@ pipeline {
 	        dockerImage      =       "${env.ecrRepo}:${env.BUILD_ID}" 
 	}
 	stages{
-		stage('SCM Checkout') {
+		/*stage('SCM Checkout') {
 			steps {
-				//git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
-				sh 'git clone --branch ${branch} --depth 1 ${repoUrl}'
+				git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
 			}
-		}
+		} */
 		stage('Build Binaries') {
 			steps {
 				sh "mvn clean package -DskipTests"
@@ -97,7 +96,7 @@ pipeline {
 			steps {
 				script { 
 					cleanWs()
-					sh 'git clone --branch ${branch} --depth 1 ${repoUrl}'
+					//sh 'git clone --branch ${branch} --depth 1 ${repoUrl}'
 					sh '''docker build -t $dockerImage ./
 					docker tag $dockerImage $ecrRepo:latest
                                         '''
