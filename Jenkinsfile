@@ -46,7 +46,6 @@ pipeline {
 						gitTag             =  "${pomVersion}${tag3}"
 						sh "git tag $gitTag"
                                                 sh "git push origin $gitTag"
-						def dockerImage    =  "${env.ecrRepo}:${gitTag}" 
 					}
 				}
 			}
@@ -57,6 +56,7 @@ pipeline {
 				script { 
 					cleanWs()
 					git branch: branch, url: repoUrl
+					echo "$gitTag"
 					def command = 'docker build -t ${ecrRepo}:$gitTag ./'
 
 					sh command
