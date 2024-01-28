@@ -95,7 +95,6 @@ pipeline {
 			agent { label 'agent1' }
 			steps {
 				script { 
-					cleanWs()
 					//sh 'git clone --branch ${branch} --depth 1 ${repoUrl}'
 					sh '''docker build -t $dockerImage ./
 					docker tag $dockerImage $ecrRepo:latest
