@@ -1,9 +1,8 @@
 pipeline {
 	options {
-		buildDiscarder(logRotator(numToKeepStr: '8'))
+		buildDiscarder(logRotator(numToKeepStr: '10'))
                 skipDefaultCheckout() 
                 disableConcurrentBuilds() 
-		ansiColor('xterm')
 	}
 	agent any
 	parameters {
@@ -21,24 +20,19 @@ pipeline {
 	stages{
 		stage('SCM Checkout') {
 			steps {
+				cleanWs() 
 				git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
 			}
 		}
-		stage('Build Artifact') {
+		stage('Build Binaries') {
 			steps {
 				sh "mvn clean package -DskipTests"
 			}
 		}
 		stage('JUnit Test'){
-			//jdk-17 fails this stage.
 			tools { jdk "jdk-11" }
 			steps {
 				sh "mvn test"
-			}
-			post {
-				always {
-					junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults : true)
-				}
 			}
 		}
 		stage('SonarQube Scan') {
@@ -67,17 +61,30 @@ pipeline {
 				}
 			}
 		} 
-		stage('Publish Artifact to JFrog') {
+		stage('Publish Artifacts to JFrog') {
 			steps {
 				script {
 					sh "mvn deploy -DskipTests -Dmaven.install.skip=true | tee jfrog.log"
 					def artifactUrl      =     sh(returnStdout: true, script: 'tail -20 jfrog.log | grep ".war" jfrog.log | grep -v INFO | grep -v Uploaded')
-				        jfrog_Artifact       =     artifactUrl.drop(20)        
+				        jfrog_Artifact       =     artifactUrl.drop(20)
+					tag1                 =     jfrog_Artifact.drop(98)
+					tag2                 =     tag1.replaceAll(".war", "") 
 					echo "Artifact URL: ${jfrog_Artifact}"
 				}
 			}
 		}
-		stage('Docker Image Build') {
+		stage('Push Tag to Git') {
+			steps {
+				script{
+					def pomVersion     =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
+					gitTag             =  "${pomVersion}${tag3}"
+					sh "git tag $gitTag"
+					sh "git push origin $gitTag"
+					}
+				}
+			}
+		} 
+		stage('Build Images') {
 			agent { label 'agent1' }
 			steps {
 				script { 
@@ -140,9 +147,4 @@ pipeline {
 			}
 		} 
 	} 
-	post { 
-		always {
-			cleanWs() 
-		} 
-	}
 }
