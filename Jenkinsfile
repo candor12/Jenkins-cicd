@@ -87,11 +87,10 @@ pipeline {
 			steps { 
 				withCredentials([usernamePassword(credentialsId: 'gitPAT',usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
 					script{
-					        def pomVersion  =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
-						gitTag          =  "${pomVersion}${tag3}"
-						sh """git tag -a $gitTag -m 'Pushed by Jenkins'
-                                                git push origin --tags
-				                """
+					        def pomVersion      =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
+						def gitTag          =  "${pomVersion}${tag3}"
+						sh '''git tag -a $gitTag -m "Pushed by Jenkins" '''
+                                                sh '''git push origin $gitTag'''
 					}
 				}
 			}
