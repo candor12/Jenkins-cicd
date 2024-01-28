@@ -30,8 +30,6 @@ pipeline {
 		stage('Tag Checkout') {
 			when { buildingTag() } 
 			steps {
-				//sh "git clone -c advice.detachedHead=false -b '${pullTag}' --single-branch ${repoUrl}"
-				//git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
 				checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: repoUrl, credentialsId: 'gitPAT' ]], branches: [[name: pullTag]]], poll: false
 			}
 		} 
@@ -71,8 +69,17 @@ pipeline {
 			when { buildingTag() }
 			steps{
 				script{ 
-					def tag = env.GIT_TAG
-					echo "${tag}"
+					echo "${pullTag}"
+					def snapshotRepo    =   "http://172.31.17.3:8081/repository/maven-snapshots"
+					def releaseRepo     =   "http://172.31.17.3:8081/repository/maven-releases"
+					def group           =   sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.groupId -q -DforceStdout")
+					groupId             =   group.replaceAll('/','.')
+					def artifact        =   sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.artifactId -q -DforceStdout")
+					artifactId          =   artifact.replaceAll('/','.')
+				        def artifact        =   "${pullTag}"
+					if (artifact.contains("SNAPSHOT")) {
+						artifactURL =   "${snapshotRepo}/${groupId}/${artifactId}/${pomVersion}/${artifactId}-v2.3-20240128.093751-12.war"
+					}
                     }}}
 		stage('Build Docker Images') {
 			when { not { buildingTag() } }
