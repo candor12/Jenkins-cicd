@@ -77,7 +77,7 @@ pipeline {
 			steps {
 				script{
 					def pomVersion     =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
-					gitTag             =  "${pomVersion}${tag3}"
+					gitTag             =  "${pomVersion}${tag2}"
 					sh "git tag $gitTag"
 					sh "git push origin $gitTag"
 					}
