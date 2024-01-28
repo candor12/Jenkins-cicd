@@ -56,7 +56,7 @@ pipeline {
 				script { 
 					cleanWs()
 					git branch: branch, url: repoUrl
-					dockerTag     =  sh (returnStdout: true, script: 'echo "$gitTag"')
+					dockerTag     =  echo "$gitTag"
 					def command = 'docker build -t ${ecrRepo}:${dockerTag} ./'
 
 					sh command
