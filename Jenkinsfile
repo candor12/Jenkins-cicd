@@ -69,7 +69,7 @@ pipeline {
 		stage('Print Tag Name'){
 			when { buildingTag() }
 			steps{
-				script{ dir(
+				script{ 
 					def tag = env.GIT_TAG
 					echo "${tag}"
                     }}}}
