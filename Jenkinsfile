@@ -67,7 +67,7 @@ pipeline {
 					sh "mvn deploy -DskipTests -Dmaven.install.skip=true | tee jfrog.log"
 					def artifactUrl      =     sh(returnStdout: true, script: 'tail -20 jfrog.log | grep ".war" jfrog.log | grep -v INFO | grep -v Uploaded')
 				        jfrog_Artifact       =     artifactUrl.drop(20)
-					tag1                 =     jfrog_Artifact.drop(98)
+					tag1                 =     jfrog_Artifact.drop(101)
 					tag2                 =     tag1.replaceAll(".war", "") 
 					echo "Artifact URL: ${jfrog_Artifact}"
 				}
