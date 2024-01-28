@@ -73,10 +73,12 @@ pipeline {
 				script {
 					sh "mvn deploy -DskipTests -Dmaven.install.skip=true | tee nexus.log"
 					def artifactUrl     =     sh(returnStdout: true, script: 'tail -20 nexus.log | grep ".war" nexus.log | grep -v INFO | grep -v Uploaded')
-				        nexusArtifact       =     artifactUrl.drop(20)    
-                                        def tag1            =     nexusArtifact.drop(101)
-				        tag2                =     tag1.take(19) 
+				        nexusArtifact       =     artifactUrl.drop(20)
 					echo "Artifact URL: ${nexusArtifact}"
+                                        def tag1            =     nexusArtifact.drop(101)
+				       // tag2                =     tag1.take(19) 
+					def tag2                =     sh(returnStdout: true, script: """echo "$tag1" | sed 's/.war$//'""")
+					echo "$tag2"
 				}
 			}
 		}
