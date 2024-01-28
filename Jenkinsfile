@@ -10,8 +10,7 @@ pipeline {
 		gitCreds         =       "gitPAT"
 	        scannerHome      =       tool 'sonartool'
 	        ecrRepo          =       "674583976178.dkr.ecr.us-east-2.amazonaws.com/teamimagerepo"
-		dockerTag        =       ''
-	       
+		def dockerTag    =       ''
 	}
 	stages{
 		stage('SCM Checkout') {
@@ -47,7 +46,7 @@ pipeline {
 						gitTag             =  "${pomVersion}${tag3}"
 						sh "git tag $gitTag"
                                                 sh "git push origin $gitTag"
-						env.dockerTag          =  "$ecrRepo:$gitTag"
+						env.dockerTag      =  "${ecrRepo}:${gitTag}"
 					}
 				}
 			}
