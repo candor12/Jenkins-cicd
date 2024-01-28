@@ -10,6 +10,7 @@ pipeline {
 		gitCreds         =       "gitPAT"
 	        scannerHome      =       tool 'sonartool'
 	        ecrRepo          =       "674583976178.dkr.ecr.us-east-2.amazonaws.com/teamimagerepo"
+		dockerTag        =       ''
 	       
 	}
 	stages{
@@ -46,6 +47,7 @@ pipeline {
 						gitTag             =  "${pomVersion}${tag3}"
 						sh "git tag $gitTag"
                                                 sh "git push origin $gitTag"
+						dockerTag          =  "${gitTag}"
 					}
 				}
 			}
@@ -56,12 +58,10 @@ pipeline {
 				script { 
 					cleanWs()
 					git branch: branch, url: repoUrl
-					dockerTag     =  echo "$gitTag"
 					def command = 'docker build -t ${ecrRepo}:${dockerTag} ./'
-
 					sh command
-					sh '''docker tag $dockerImage $ecrRepo:latest
-                                        '''
+					//sh '''docker tag $dockerImage $ecrRepo:latest
+                                       // '''
 				}
 			}
 		}
