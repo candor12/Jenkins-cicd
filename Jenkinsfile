@@ -22,7 +22,7 @@ pipeline {
 		stage('SCM Checkout') {
 			steps {
 				//git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
-				git clone --branch ${branch} --depth 1 ${repoUrl}
+				sh 'git clone --branch ${branch} --depth 1 ${repoUrl}'
 			}
 		}
 		stage('Build Binaries') {
@@ -97,7 +97,7 @@ pipeline {
 			steps {
 				script { 
 					cleanWs()
-					git clone --branch ${branch} --depth 1 ${repoUrl}
+					sh 'git clone --branch ${branch} --depth 1 ${repoUrl}'
 					sh '''docker build -t $dockerImage ./
 					docker tag $dockerImage $ecrRepo:latest
                                         '''
