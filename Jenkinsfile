@@ -18,13 +18,13 @@ pipeline {
 				git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
 			}
 		}
-		stage('Build Artifact') {
+		stage('Build Binaries') {
 			steps {
 				sh "mvn clean package -DskipTests"
 			}
 		}
 		
-		stage('Publish Artifact to Nexus') {
+		stage('Publish Artifacts') {
 			steps {
 				script {
 					sh "mvn deploy -DskipTests -Dmaven.install.skip=true | tee nexus.log"
@@ -46,19 +46,21 @@ pipeline {
 						gitTag             =  "${pomVersion}${tag3}"
 						sh "git tag $gitTag"
                                                 sh "git push origin $gitTag"
-						dockerImage        =       "${env.ecrRepo}:${gitTag}" 
+						def dockerImage    =  "${env.ecrRepo}:${gitTag}" 
 					}
 				}
 			}
 		} 
-		stage('Docker Image Build') {
+		stage('Build Docker Images') {
 			agent { label 'agent1' }
 			steps {
 				script { 
 					cleanWs()
 					git branch: branch, url: repoUrl
-					sh '''docker build -t ${dockerImage} ./
-					docker tag $dockerImage $ecrRepo:latest
+					def command = 'docker build -t ${ecrRepo}:${gitTag} ./'
+
+					sh command
+					sh '''docker tag $dockerImage $ecrRepo:latest
                                         '''
 				}
 			}
