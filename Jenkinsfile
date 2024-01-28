@@ -89,7 +89,7 @@ pipeline {
 					script{
 					        def pomVersion  =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
 						gitTag          =  "${pomVersion}${tag3}"
-						sh """git tag -a ${gitTag} -m 'Pushed by Jenkins'
+						sh """git tag -a $gitTag -m 'Pushed by Jenkins'
                                                 git push origin --tags
 				                """
 					}
