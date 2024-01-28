@@ -12,7 +12,7 @@ pipeline {
 		booleanParam(name: "Scan", defaultValue: false, description: "By Pass SonarQube and Trivy Scan")
 	}
 	environment {
-		branch           =       "master"
+		branch           =       "trial"
 		repoUrl          =       "https://github.com/candor12/jenkins-cicd.git"
 		gitCreds         =       "gitPAT"
 	        scannerHome      =       tool 'sonartool'
