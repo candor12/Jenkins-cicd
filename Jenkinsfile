@@ -75,9 +75,9 @@ pipeline {
 					def artifactUrl     =     sh(returnStdout: true, script: 'tail -20 nexus.log | grep ".war" nexus.log | grep -v INFO | grep -v Uploaded')
 				        nexusArtifact       =     artifactUrl.drop(20)
 					echo "Artifact URL: ${nexusArtifact}"
-                                        def tag1            =     nexusArtifact.drop(101)
-				        tag2                =     tag1.take(19)
-					tag3                =     tag2.replaceAll(".war", "")
+                                        tag1            =     nexusArtifact.drop(98)
+				        //tag2                =     tag1.take(19)
+					tag3                =     tag1.replaceAll(".war", "")
 					
 					
 				}
