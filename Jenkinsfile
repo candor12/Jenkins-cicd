@@ -21,6 +21,7 @@ pipeline {
 	stages{
 		stage('SCM Checkout') {
 			steps {
+				cleanWs()
 				git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
 			}
 		} 
@@ -89,6 +90,7 @@ pipeline {
 			agent { label 'agent1' }
 			steps {
 				script { 
+					cleanWs()
 					git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
 					sh '''docker build -t $dockerImage ./
 					docker tag $dockerImage $ecrRepo:latest
@@ -175,5 +177,4 @@ pipeline {
 			}
 		} 
 	} 
-	post { always { cleanWs() } }
 }
