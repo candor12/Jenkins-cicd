@@ -17,6 +17,7 @@ pipeline {
 	        scannerHome      =       tool 'sonartool'
 	        ecrRepo          =       "674583976178.dkr.ecr.us-east-2.amazonaws.com/teamimagerepo"
 	        dockerImage      =       "${env.ecrRepo}:${env.BUILD_ID}" 
+		pullTag          =       "${env.JOB_BASE_NAME}"
 	}
 	stages{
 		stage('SCM Checkout') {
