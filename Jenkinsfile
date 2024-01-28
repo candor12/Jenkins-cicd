@@ -76,7 +76,7 @@ pipeline {
 				        nexusArtifact       =     artifactUrl.drop(20)    
                                         def tag1            =     nexusArtifact.drop(101)
 					def tag2                =     sh(returnStdout: true, script: """echo "$tag1" | sed 's/.war$//'""")
-					echo "${tag2}"
+					echo "$tag2"
 				        //tag2                =     tag1.take(19)         
 					echo "Artifact URL: ${nexusArtifact}"
 				}
