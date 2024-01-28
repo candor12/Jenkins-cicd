@@ -11,7 +11,7 @@ pipeline {
 		booleanParam(name: "Scan", defaultValue: false, description: "By Pass SonarQube, Grype and Trivy Scan")
 	}
 	environment {
-		branch           =       "master"
+		branch           =       "test-tags"
 		repoUrl          =       "https://github.com/candor12/jenkins-cicd.git"
 		gitCreds         =       "gitPAT"
 	        scannerHome      =       tool 'sonartool'
@@ -20,18 +20,26 @@ pipeline {
 	}
 	stages{
 		stage('SCM Checkout') {
+			when { not { buildingTag() } }
 			steps {
 				cleanWs()
 				git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
 			}
 		} 
+		stage('Tag Checkout') {
+			when { buildingTag() } 
+			steps {
+				sh "git clone -c advice.detachedHead=false -b '${pullTag}' --single-branch ${repoUrl}"
+			}
+		} 
 		stage('Build Binaries') {
+			when { not { buildingTag() } }
 			steps {
 				sh "mvn clean package -DskipTests"
 			}
 		}
-		
 		stage('Publish Artifacts') {
+			when { not { buildingTag() } }
 			steps {
 				script {
 					sh "mvn deploy -DskipTests -Dmaven.install.skip=true | tee nexus.log"
@@ -44,9 +52,10 @@ pipeline {
 			}
 		}
 		stage('Push Tag to Repository') {
-			steps { 
-				withCredentials([usernamePassword(credentialsId: 'gitPAT',usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-					script{
+			when { not { buildingTag() } }
+			      steps { 
+				      withCredentials([usernamePassword(credentialsId: 'gitPAT',usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+					      script{
 						def pomVersion     =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
 						gitTag             =  "${pomVersion}${tag3}"
 						sh "git tag $gitTag"
@@ -64,6 +73,7 @@ pipeline {
 						error "No tag provided. Deployment aborted."
                     }}}}
 		stage('Build Docker Images') {
+			when { not { buildingTag() } }
 			agent { label 'agent1' }
 			steps {
 				script { 
@@ -75,6 +85,5 @@ pipeline {
 				}
 			}
 		}
-		
 	} 
 }
