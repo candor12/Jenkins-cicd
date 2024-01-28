@@ -46,7 +46,7 @@ pipeline {
 						gitTag             =  "${pomVersion}${tag3}"
 						sh "git tag $gitTag"
                                                 sh "git push origin $gitTag"
-						dockerImage        =       "${env.ecrRepo}:$gitTag" 
+						dockerImage        =       "${env.ecrRepo}:${gitTag}" 
 					}
 				}
 			}
@@ -57,7 +57,7 @@ pipeline {
 				script { 
 					cleanWs()
 					git branch: branch, url: repoUrl
-					sh '''docker build -t $dockerImage ./
+					sh '''docker build -t ${dockerImage} ./
 					docker tag $dockerImage $ecrRepo:latest
                                         '''
 				}
