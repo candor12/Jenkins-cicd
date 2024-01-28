@@ -133,7 +133,7 @@ pipeline {
 		}
 		stage('EKS Deployment') {
 			agent { label 'agent1' }
-			when { expression { return params.EksDeploy } }
+			when { expression { return params.EKSDeploy } }
 			steps {
 				script { 
 					dir('k8s') {
