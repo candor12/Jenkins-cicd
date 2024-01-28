@@ -31,7 +31,8 @@ pipeline {
 			when { buildingTag() } 
 			steps {
 				//sh "git clone -c advice.detachedHead=false -b '${pullTag}' --single-branch ${repoUrl}"
-				git branch: pullTag, url: repoUrl, credentialsId: 'gitPAT'
+				//git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
+				checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: '${repoUrl}', credentialsId: 'gitPAT' ]], branches: [[name: "refs/tags/${pullTag}"]]], poll: false
 			}
 		} 
 		stage('Build Binaries') {
