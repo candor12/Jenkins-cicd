@@ -1,14 +1,14 @@
 pipeline {
 	options {
 		buildDiscarder(logRotator(numToKeepStr: '10'))
-                //skipDefaultCheckout() 
+                skipDefaultCheckout() 
                 disableConcurrentBuilds() 
 	}
 	agent any
 	parameters {
-		booleanParam(name: "EksDeploy", defaultValue: false, description: "Deploy the Build to EKS")
+		booleanParam(name: "EksDeploy", defaultValue: false, description: "Deploy the Build to EKS Cluster")
 		booleanParam(name: "AnsibleDeploy", defaultValue: false, description: "Deploy the Build to Target Server using Ansible")
-		booleanParam(name: "Scan", defaultValue: false, description: "By Pass SonarQube and Trivy Scan")
+		booleanParam(name: "Scan", defaultValue: false, description: "By Pass SonarQube, Grype and Trivy Scan")
 	}
 	environment {
 		branch           =       "master"
@@ -19,26 +19,20 @@ pipeline {
 	        dockerImage      =       "${env.ecrRepo}:${env.BUILD_ID}" 
 	}
 	stages{
-		/*stage('SCM Checkout') {
+		stage('SCM Checkout') {
 			steps {
 				git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
 			}
-		} */
+		} 
 		stage('Build Binaries') {
 			steps {
 				sh "mvn clean package -DskipTests"
 			}
 		}
 		stage('JUnit Test') {
-			//jdk-17 fails this stage.
 			tools { jdk "jdk-11" }
 			steps {
 				sh "mvn test"
-			}
-			post {
-				always {
-					junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults : true)
-				}
 			}
 		}
 		stage('SonarQube Scan') {
@@ -95,14 +89,30 @@ pipeline {
 			agent { label 'agent1' }
 			steps {
 				script { 
-					//sh 'git clone --branch ${branch} --depth 1 ${repoUrl}'
+					git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
 					sh '''docker build -t $dockerImage ./
 					docker tag $dockerImage $ecrRepo:latest
                                         '''
 				}
 			}
 		}
-		stage ('Trivy Scan') {
+		stage ('Grype Image Scan') {
+			agent { label 'agent1' }
+			when { not { expression { return params.Scan  } } }
+			steps {
+				script {
+					curl -sfL https://github.com/candor12/templates/blob/main/grypehtml.tmpl > ./grypehtml.tpl
+					sh "grype ${dockerImage} --scope all-layers --fail-on critical -o template -t ./grypehtml.tmpl > ./grype.html"
+				}
+			}
+			post { always { 
+				archiveArtifacts artifacts: "grype.html", fingerprint: true
+				publishHTML target : [allowMissing: true, alwaysLinkToLastBuild: true, keepAll: true,
+						      reportDir: './', reportFiles: 'grype.html', reportName: 'Grype Scan Report', reportTitles: 'Grype Scan Report']
+				      }
+			     }
+		}
+		stage ('Trivy Image Scan') {
 			agent { label 'agent1' }
 			when { not { expression { return params.Scan  } } }
 			steps {
