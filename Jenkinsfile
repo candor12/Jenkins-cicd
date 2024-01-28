@@ -101,7 +101,7 @@ pipeline {
 			when { not { expression { return params.Scan  } } }
 			steps {
 				script {
-					curl -sfL https://github.com/candor12/templates/blob/main/grypehtml.tmpl > ./grypehtml.tpl
+					sh 'curl -sfL https://github.com/candor12/templates/blob/main/grypehtml.tmpl > ./grypehtml.tpl'
 					sh "grype ${dockerImage} --scope all-layers --fail-on critical -o template -t ./grypehtml.tmpl > ./grype.html"
 				}
 			}
