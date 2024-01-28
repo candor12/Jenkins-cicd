@@ -72,7 +72,7 @@ pipeline {
 				script{ 
 					def tag = env.GIT_TAG
 					echo "${tag}"
-                    }}}}
+                    }}}
 		stage('Build Docker Images') {
 			when { not { buildingTag() } }
 			agent { label 'agent1' }
