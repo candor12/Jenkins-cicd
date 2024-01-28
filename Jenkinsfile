@@ -47,7 +47,7 @@ pipeline {
 						gitTag             =  "${pomVersion}${tag3}"
 						sh "git tag $gitTag"
                                                 sh "git push origin $gitTag"
-						dockerTag          =  "$ecrRepo:$gitTag"
+						env.dockerTag          =  "$ecrRepo:$gitTag"
 					}
 				}
 			}
