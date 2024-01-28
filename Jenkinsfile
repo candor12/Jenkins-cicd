@@ -76,9 +76,10 @@ pipeline {
 				        nexusArtifact       =     artifactUrl.drop(20)
 					echo "Artifact URL: ${nexusArtifact}"
                                         def tag1            =     nexusArtifact.drop(101)
-				       // tag2                =     tag1.take(19) 
-					def tag2                =     sh(returnStdout: true, script: """echo "$tag1" | sed 's/.war$//'""")
-					echo "$tag2"
+				        tag2                =     tag1.take(19)
+					tag3                =     tag2.replaceAll(".war", "")
+					echo $tag3
+					
 				}
 			}
 		}
@@ -86,8 +87,8 @@ pipeline {
 			steps { 
 				withCredentials([usernamePassword(credentialsId: 'gitPAT',usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
 					script{
-					        def pomVersion =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
-						gitTag         =  "${pomVersion}${tag2}"
+					        def pomVersion  =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
+						gitTag          =  "${pomVersion}${tag2}"
 						sh """git tag -a ${gitTag} -m 'Pushed by Jenkins'
                                                 git push origin --tags
 				                """
