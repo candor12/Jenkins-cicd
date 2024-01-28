@@ -1,9 +1,8 @@
 pipeline {
 	options {
-		buildDiscarder(logRotator(numToKeepStr: '8'))
+		buildDiscarder(logRotator(numToKeepStr: '10'))
                 skipDefaultCheckout() 
                 disableConcurrentBuilds() 
-		ansiColor('xterm')
 	}
 	agent any
 	parameters {
@@ -25,7 +24,7 @@ pipeline {
 				git branch: branch, url: repoUrl, credentialsId: 'gitPAT'
 			}
 		}
-		stage('Build Artifact') {
+		stage('Build Binaries') {
 			steps {
 				sh "mvn clean package -DskipTests"
 			}
@@ -68,14 +67,14 @@ pipeline {
 				}
 			}
 		} 
-		stage('Publish Artifact to Nexus') {
+		stage('Publish Artifacts') {
 			steps {
 				script {
 					sh "mvn deploy -DskipTests -Dmaven.install.skip=true | tee nexus.log"
 					def artifactUrl     =     sh(returnStdout: true, script: 'tail -20 nexus.log | grep ".war" nexus.log | grep -v INFO | grep -v Uploaded')
 				        nexusArtifact       =     artifactUrl.drop(20)    
-                                        def tag1            =     nexusArtifact.drop(101)
-				        tag2                =     tag1.take(19) 
+                                        tag1                =     nexusArtifact.drop(98)
+					tag3                =     tag1.replaceAll(".war", "") 
 					echo "Artifact URL: ${nexusArtifact}"
 				}
 			}
@@ -84,16 +83,15 @@ pipeline {
 			steps { 
 				withCredentials([usernamePassword(credentialsId: 'gitPAT',usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
 					script{
-					        def pomVersion =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
-						gitTag         =  "${pomVersion}${tag2}"
-						sh """git tag -a ${gitTag} -m 'Pushed by Jenkins'
-                                                git push origin --tags
-				                """
+						def pomVersion     =  sh(returnStdout: true, script: "mvn -DskipTests help:evaluate -Dexpression=project.version -q -DforceStdout")
+						gitTag             =  "${pomVersion}${tag3}"
+						sh "git tag $gitTag"
+                                                sh "git push origin $gitTag"
 					}
 				}
 			}
 		} 
-		stage('Docker Image Build') {
+		stage('Build Docker Images') {
 			agent { label 'agent1' }
 			steps {
 				script { 
