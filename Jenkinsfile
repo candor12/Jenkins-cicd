@@ -31,7 +31,7 @@ pipeline {
 			when { buildingTag() } 
 			steps {
 				//sh "git clone -c advice.detachedHead=false -b '${pullTag}' --single-branch ${repoUrl}"
-				git branch: ${pullTag}, url: repoUrl, credentialsId: 'gitPAT'
+				git branch: pullTag, url: repoUrl, credentialsId: 'gitPAT'
 			}
 		} 
 		stage('Build Binaries') {
