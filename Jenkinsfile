@@ -57,9 +57,9 @@ pipeline {
 					cleanWs()
 					git branch: branch, url: repoUrl
 					dockerImage      =       "${env.ecrRepo}:${gitTag}" 
-					sh '''docker build -t $dockerImage ./
+					sh """docker build -t $dockerImage ./
 					docker tag $dockerImage $ecrRepo:latest
-                                        '''
+                                        """
 				}
 			}
 		}
